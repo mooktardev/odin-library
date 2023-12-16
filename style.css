@@ -1,0 +1,13 @@
+.book-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.book-container .check {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
