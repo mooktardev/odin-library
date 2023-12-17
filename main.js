@@ -1,23 +1,46 @@
-// Init Library
-const myLibrary = [
-  {
-    title: "Harry Potter",
-    author: "J. K. Rowling",
-    pages: 900,
-    read: true,
-  },
-];
-
-// Initialise Book constructor
-function Book(title, author, pages, read) {
-	(this.title = title),
-    (this.author = author),
-    (this.pages = pages),
-    (this.read = read);
+class Book {
+  constructor(
+    title = "",
+    author = "",
+    pages = 0,
+    read = false
+  ) {
+    this.title = title,
+    this.author = author,
+    this.pages = pages,
+    this.read = read
+  }
 }
 
-// Check if book exists in the library using some
-const isInLibrary = (title) => myLibrary.some((b) => b.title === title);
+class Library {
+  constructor() {
+    this.books = []
+  }
+  getBook(title) {
+    return this.books.find(b => b.title === title)
+  }
+  isInLibrary(title) {
+    return this.books.some((b) => b.title === title)
+  }
+  addBook(book) {
+    if (!this.isInLibrary(book)) {
+      return this.books.push(book)
+    }
+  }
+  removeBook(title) {
+    this.books = this.books.filter(b => b.title !== title)
+  }
+  toggleRead(title) {
+    const book = this.books.find(b => b.title === title)
+    book.read = !book.read
+  }
+}
+
+// Init a library
+const myLibrary = new Library()
+
+// Sample book's data
+myLibrary.addBook({title: 'Harry Potter', author: "J. K. someone", pages: 5990, read: false})
 
 // MODAL FORM
 const addBookBtn = document.querySelector(".add-book");
@@ -45,51 +68,45 @@ const cardWrapper = document.querySelector(".card-wrapper");
 const clearCardWrapper = () => (cardWrapper.innerHTML = "");
 const updateCardWrapper = () => {
   clearCardWrapper();
-  for (let book of myLibrary) {
-    let index = myLibrary.findIndex((b) => b === book);
-    createCardItem(book, index);
+  for (let book of myLibrary.books) {
+    createCardItem(book);
   }
 };
 
 // Create Book Card
-const createCardItem = ({ title, author, pages, read }, index) => {
+const createCardItem = ({ title, author, pages, read }) => {
   const cardEL = document.createElement("div");
   const cardTitle = document.createElement("h3");
   const cardInfo = document.createElement("div");
   const cardAuthor = document.createElement("p");
   const cardPages = document.createElement("p");
   const cardFooter = document.createElement("div");
-  const cardIsRead = document.createElement("button");
+  const cardRead = document.createElement("button");
   const cardDelete = document.createElement("button");
   const readColor = read ? "green" : "blue"
   // Set Attributes and Classes
-  cardEL.className =
-    "flex flex-col items-start p-8 rounded-xl shadow-md bg-white";
+  cardEL.className = "flex flex-col items-start p-8 rounded-xl shadow-md bg-white";
   cardTitle.className = "text-2xl font-semibold normal-case";
   cardInfo.className = "w-full flex justify-between mt-3 mb-5";
   cardPages.className = "font-semibold italic";
-  cardFooter.className =
-    "w-full flex justify-center items-center text-sm space-x-3 mt-3";
-  cardIsRead.className = `toggle-read p-2 bg-${readColor}-400/40 text-${readColor}-800 hover:bg-${readColor}-400/60 transition duration-200 ease-in-out rounded-md shadow-sm`;
-  cardIsRead.setAttribute("title", "Toggle is read");
-  cardIsRead.dataset.id = index;
-  cardIsRead.onclick = toggleReadStatus;
-  cardDelete.className =
-    "remove-book p-2 items-center text-red-800 bg-red-400/40 hover:bg-red-400/60 transition duration-200 ease-in-out rounded-md shadow-sm";
+  cardFooter.className = "w-full flex justify-center items-center text-sm space-x-3 mt-3";
+  cardRead.className = `toggle-read p-2 bg-${readColor}-400/40 text-${readColor}-800 hover:bg-${readColor}-400/60 transition duration-200 ease-in-out rounded-md shadow-sm`;
+  cardRead.setAttribute("title", "Toggle is read");
+  cardRead.dataset.bookTitle = title;
+  cardRead.onclick = toggleReadStatus;
+  cardDelete.className = "remove-book p-2 items-center text-red-800 bg-red-400/40 hover:bg-red-400/60 transition duration-200 ease-in-out rounded-md shadow-sm";
   cardDelete.setAttribute("title", "Remove this book");
-  cardDelete.dataset.id = index;
+  cardDelete.dataset.bookTitle = title;
   cardDelete.onclick = removeBookFromLibrary;
   // Set values
   cardTitle.innerText = title;
   cardAuthor.innerHTML = `By <span class="italic underline text-semibold">${author}</span>`;
   cardPages.innerHTML = `<span class="slashed-zero proportional-nums">${pages}</span> pages`;
-  cardIsRead.innerHTML = `<i class="fa-solid fa-circle-${read ? 'check' : 'xmark'}"></i> ${
-    read ? "Already read!" : "Not read yet!"
-  }`;
+  cardRead.innerHTML = `<i class="fa-solid fa-circle-${read ? 'check' : 'xmark'}"></i> ${ read ? "Already read!" : "Not read yet!" }`;
   cardDelete.innerHTML = `<i class="fa-solid fa-trash"></i> Remove`;
   // Append childs
   cardInfo.append(cardAuthor, cardPages);
-  cardFooter.append(cardIsRead, cardDelete);
+  cardFooter.append(cardRead, cardDelete);
   cardEL.append(cardTitle, cardInfo, cardFooter);
   cardWrapper.appendChild(cardEL);
 };
@@ -101,14 +118,12 @@ function addBookToLibrary() {
   const author = document.getElementById("book-author").value;
   const pages = document.getElementById("book-pages").value;
   const read = document.getElementById("book-read").checked;
-  // Create a new book using our Book constructor function and pass in the user's inputs as arguments
   const book = new Book(title, author, pages, read);
-  console.log(read);
+  console.log(book);
   // Add the book to our library array
-  if (!isInLibrary(title)) {
-    myLibrary.push(book);
-    const bookIndex = myLibrary.findIndex((b) => b == book);
-    createCardItem(book, bookIndex);
+  if (!myLibrary.isInLibrary(book.title)) {
+    myLibrary.addBook(book)
+    createCardItem(book);
     document.querySelector(".book-title-error").classList.add("hidden");
     closeModal();
     formModal.reset();
@@ -116,7 +131,8 @@ function addBookToLibrary() {
     document.querySelector(".book-title-error").classList.remove("hidden");
   }
 }
-// Submit form data
+
+// Submit Form data
 formModal.onsubmit = (e) => {
   e.preventDefault();
   addBookToLibrary();
@@ -124,19 +140,16 @@ formModal.onsubmit = (e) => {
 
 // Toggle if book is read or not
 function toggleReadStatus(e) {
-  let index = e.target.dataset.id;
-  const book = myLibrary[index];
-  book.read = !book.read;
+  const title = e.target.dataset.bookTitle;
+  myLibrary.toggleRead(title);
   updateCardWrapper();
 }
 
 // Remove book from myLibrary
 function removeBookFromLibrary(e) {
-  let index = e.target.dataset.id;
-  if (myLibrary[index]) {
-    myLibrary.splice(index, 1);
-    updateCardWrapper();
-  }
+  let title = e.target.dataset.bookTitle;
+  myLibrary.removeBook(title)
+  updateCardWrapper();
 }
 
 // Windows loaded
